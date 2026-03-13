@@ -1,0 +1,99 @@
+from auxiliares import (cargar_csv, guardar_csv, listar_por_clase, 
+                        listar_por_caracteristica, agregar_animal, Animal)
+
+def mostrar_menu():
+    """Muestra el menú principal y retorna la opción seleccionada."""
+    print("\n" + "="*40)
+    print("        SISTEMA ZOOLÓGICO")
+    print("="*40)
+    print("1. Listar animales por clasificación (clase)")
+    print("2. Listar animales por característica")
+    print("3. Agregar un nuevo animal")
+    print("4. Salir y Guardar cambios")
+    return input("Selecciona una opción (1-4): ")
+
+def main():
+    ruta_clases = 'clases.csv'
+    ruta_zoo = 'zoo.csv'
+    
+    # Nombres exactos de las columnas del zoo.csv para usarlas al guardar y agregar
+    campos_zoo = [
+        'nombre_animal', 'pelo', 'plumas', 'huevos', 'leche', 'vuela', 
+        'acuatico', 'depredador', 'dientes', 'espinazo', 'respira', 
+        'venenoso', 'aletas', 'patas', 'cola', 'domestico', 'tamanio_gato', 'clase'
+    ]
+
+    # Cargar ambos archivos usando la MISMA función
+    dic_clases = cargar_csv(ruta_clases, 'Clase_id')
+    dic_animales = cargar_csv(ruta_zoo, 'nombre_animal')
+
+    while True:
+        opcion = mostrar_menu()
+
+        if opcion == '1':
+            print("\n--- Clasificaciones Disponibles ---")
+            for id_c, datos_c in dic_clases.items():
+                print(f"[{id_c}] - {datos_c['Clase_tipo']}")
+            
+            id_sel = input("\nIngresa el ID de la clase que deseas listar: ")
+            animales = listar_por_clase(dic_animales, id_sel)
+            
+            if animales:
+                print(f"\n✅ Animales encontrados ({len(animales)}): {', '.join(animales)}")
+            else:
+                print("\n❌ No se encontraron animales para esa clase.")
+
+        elif opcion == '2':
+            print("\n--- Características Disponibles ---")
+            caracteristicas_validas = campos_zoo[1:-1] # Excluimos nombre y clase
+            print(", ".join(caracteristicas_validas))
+            
+            caract = input("\nIngresa la característica a buscar: ").lower()
+            
+            if caract in caracteristicas_validas:
+                animales = listar_por_caracteristica(dic_animales, caract)
+                if animales:
+                    print(f"\n✅ Animales que tienen '{caract}' ({len(animales)}): {', '.join(animales)}")
+                else:
+                    print(f"\n❌ Ningún animal registrado tiene la característica '{caract}'.")
+            else:
+                print("\n⚠️ Característica no válida.")
+
+        elif opcion == '3':
+            print("\n--- Agregar Nuevo Animal ---")
+            nombre = input("Nombre del animal: ").lower()
+            
+            print("\nClases disponibles:")
+            for id_c, datos_c in dic_clases.items():
+                print(f"[{id_c}] - {datos_c['Clase_tipo']}")
+            id_clase = input("ID de clase (1-7): ")
+            
+            caracteristicas = {}
+            print("\nResponde con '1' (Sí) o '0' (No) para las siguientes características:")
+            for campo in campos_zoo[1:-1]:
+                val = input(f"¿Tiene/Es {campo}? (1/0): ")
+                caracteristicas[campo] = val
+
+            # Creamos el objeto usando la clase Animal (4 puntos del examen)
+            nuevo_animal = Animal(nombre, caracteristicas, id_clase)
+            
+            # Lo mostramos usando los métodos str y repr
+            print("\n" + "-"*20)
+            print(f"Objeto creado (repr): {repr(nuevo_animal)}")
+            print(f"Registro (str): {str(nuevo_animal)}")
+            
+            # Lo agregamos al diccionario general
+            agregar_animal(dic_animales, nuevo_animal)
+            print("✅ ¡Animal agregado exitosamente al sistema!")
+
+        elif opcion == '4':
+            # Guardamos los cambios al salir
+            guardar_csv(ruta_zoo, dic_animales, campos_zoo)
+            print("\n💾 Cambios guardados en 'zoo.csv'. ¡Hasta luego!")
+            break
+
+        else:
+            print("\n⚠️ Opción no válida. Intenta de nuevo.")
+
+if __name__ == "__main__":
+    main()
